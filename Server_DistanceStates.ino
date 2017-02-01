@@ -111,61 +111,81 @@ void loop() {
       oldState = state;
       Serial.print("Current state: ");
       Serial.println(stateChar);
+      switch (oldState) {
+        case FW:
+          to_forward();
+          break;
+        case BW:
+          to_backward();
+          break;
+        case CW:
+          to_clockwise();
+          break;
+        case CCW:
+          to_counterclockwise();
+          break;
+        case STOP:
+          to_stop();
+          break;
+        default:
+          break;
+      }
     }
    wifi.setPage("/",html2); //why does this have to be here????
   //Serial.println(wifi.getData());
   }
-
-  getUSstate_R();
-  switch (right_distance) {
-    case FAR:
-      far_vibrate(21);
-      break;
-    case KINDAFAR:
-      kinda_far_vibrate(21);
-      break;
-    case MEDIUM:
-      medium_vibrate(21);
-      break;
-    case CLOSE:
-      close_vibrate(21);
-      break;
-    default:
-      break;
-  }
-  getUSstate_B();
-  switch (back_distance) {
-    case FAR:
-      far_vibrate(5);
-      break;
-    case KINDAFAR:
-      kinda_far_vibrate(5);
-      break;
-    case MEDIUM:
-      medium_vibrate(5);
-      break;
-    case CLOSE:
-      close_vibrate(5);
-      break;
-    default:
-      break;
-  }
-  getUSstate_L();
-  switch (left_distance) {
-    case FAR:
-      far_vibrate(22);
-      break;
-    case KINDAFAR:
-      kinda_far_vibrate(22);
-      break;
-    case MEDIUM:
-      medium_vibrate(22);
-      break;
-    case CLOSE:
-      close_vibrate(22);
-      break;
-    default:
-      break;
+  else {
+    getUSstate_R();
+    switch (right_distance) {
+      case FAR:
+        far_vibrate(21);
+        break;
+      case KINDAFAR:
+        kinda_far_vibrate(21);
+        break;
+      case MEDIUM:
+        medium_vibrate(21);
+        break;
+      case CLOSE:
+        close_vibrate(21);
+        break;
+      default:
+        break;
+    }
+    getUSstate_B();
+    switch (back_distance) {
+      case FAR:
+        far_vibrate(5);
+        break;
+      case KINDAFAR:
+        kinda_far_vibrate(5);
+        break;
+      case MEDIUM:
+        medium_vibrate(5);
+        break;
+      case CLOSE:
+        close_vibrate(5);
+        break;
+      default:
+        break;
+    }
+    getUSstate_L();
+    switch (left_distance) {
+      case FAR:
+        far_vibrate(22);
+        break;
+      case KINDAFAR:
+        kinda_far_vibrate(22);
+        break;
+      case MEDIUM:
+        medium_vibrate(22);
+        break;
+      case CLOSE:
+        close_vibrate(22);
+        break;
+      default:
+        break;
+    }
   }
 }
 
@@ -195,6 +215,84 @@ void close_vibrate(motorPin pin){
   delay(200);
   digitalWrite(pin, LOW);
   delay(100);
+}
+
+void to_forward(){
+  digitalWrite(20, 150);
+  digitalWrite(23, 150);
+  delay(100);
+  digitalWrite(20, LOW);
+  digitalWrite(23, LOW);
+  delay(100);
+  digitalWrite(20, 150);
+  digitalWrite(23, 150);
+  delay(100);
+  digitalWrite(20, LOW);
+  digitalWrite(23, LOW);
+}
+
+void to_backward(){
+  digitalWrite(5, 150);
+  delay(100);
+  digitalWrite(5, LOW);
+  delay(100);
+  digitalWrite(5, 150);
+  delay(100);
+  digitalWrite(5, LOW);
+}
+
+void to_clockwise(){
+  digitalWrite(21, 150);
+  digitalWrite(20, 150);
+  delay(100);
+  digitalWrite(21, LOW);
+  digitalWrite(20, LOW);
+  delay(100);
+  digitalWrite(21, 150);
+  digitalWrite(20, 150);
+  delay(100);
+  digitalWrite(21, LOW);
+  digitalWrite(20, LOW);
+}
+
+void to_counterclockwise(){
+  digitalWrite(22, 150);
+  digitalWrite(23, 150);
+  delay(100);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+  delay(100);
+  digitalWrite(22, 150);
+  digitalWrite(23, 150);
+  delay(100);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+}
+
+void to_stop(){
+  digitalWrite(20, 150);
+  digitalWrite(21, 150);
+  digitalWrite(22, 150);
+  digitalWrite(23, 150);
+  digitalWrite(5, 150);
+  delay(100);
+  digitalWrite(20, LOW);
+  digitalWrite(21, LOW);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+  digitalWrite(5, LOW);
+  delay(100);
+  digitalWrite(20, 150);
+  digitalWrite(21, 150);
+  digitalWrite(22, 150);
+  digitalWrite(23, 150);
+  digitalWrite(5, 150);
+  delay(100);
+  digitalWrite(20, LOW);
+  digitalWrite(21, LOW);
+  digitalWrite(22, LOW);
+  digitalWrite(23, LOW);
+  digitalWrite(5, LOW);
 }
 
 void getUSstate_R(){
