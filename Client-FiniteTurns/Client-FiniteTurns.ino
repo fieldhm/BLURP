@@ -24,7 +24,7 @@ unsigned long lastRequest = 0;
 
 /*********** Other constants used later on*********/
 #define SPEED 128
-#define NINETY 123
+#define NINETY 125
 
 /***** state setup ******/
 typedef enum { STOP, FW, BW, CW, CCW } states;
@@ -52,32 +52,41 @@ void setup() {
 }
 
 states oldState;
-
+char dataToSend[15];
+char response[15];
 void loop(){
-   if (!wifi.isBusy() && millis()-lastRequest > POLLPERIOD) {
-      wifi.sendRequest(GET, domain, 80, path, "");
-      lastRequest = millis();
-    }
-    
-   while(!wifi.hasResponse());
-    
-    oldState = state;
-    state =  getState(wifi.getResponse());
-    if(oldState != state){
-      Serial.println("New state is: ");
-      Serial.println(state);
-      setMotors();
-      }
-        
+  
+  while(wifi.isBusy());
+  wifi.sendRequest(GET, domain, 80, path, "requesting");
+  Serial.println("request sent to client");
+  while(!wifi.hasResponse());
+  responseExtract(wifi.getResponse()).toCharArray(response, 15);
+  Serial.print("response received: ");
+  Serial.println(response);
+  sprintf(dataToSend, "~%s~", response);
+  while(wifi.isBusy());
+  wifi.sendRequest(GET, domain, 80, path, dataToSend);
+  while(!wifi.hasResponse());
+  wifi.getResponse();
+  Serial.println("response sent and buffer cleared");
 
+  oldState = state;
+  state = getState(response);
+  if(oldState != state){
+    setMotors();
+    Serial.println("motors changed");
+  }
+ 
 }
 
+String responseExtract(String s){
+  int beginInd = s.indexOf("~");
+  int endInd= s.lastIndexOf("~");
+  return( s.substring(beginInd+1,endInd));
+}
 
 /**** HELPER ****/
 states getState(String response){
-      int beginInd = response.indexOf("~");
-      int endInd =response.lastIndexOf("~");
-      response = response.substring(beginInd+1, endInd);
       if(response == "FW") return(FW);
       if(response == "BW") return(BW);
       if(response == "CW")return(CW);

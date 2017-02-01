@@ -7,9 +7,9 @@ MPU9250 imu;
 
 #define SSID "BLURP"
 #define PASSWD "MOMENTUM"
-#define UPDATEPERIOD 10
-#define STATEPERIOD 2000 //how long to wait after state change before getting new measurment
-
+#define UPDATEPERIOD 100
+#define STATEPERIOD 1000 //how long to wait after state change before getting new measurment
+#define DATAPERIOD 100
 
 
 //variables needed for getting and computing direction
@@ -45,8 +45,6 @@ int val = 0;
 int light = 0; 
 int led = 13;
 
-int lastupdate = millis();
-int laststateupdate = millis();
 int blinktime = millis();
 
 char html2[500];
@@ -63,8 +61,10 @@ void setup() {
 /********************************/
 
   /**************** IMU Setup***********************/
+  
   Wire.begin();
   byte c = imu.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
+  
   Serial.print("MPU9250 "); Serial.print("I AM "); Serial.print(c, HEX);
   Serial.print(" I should be "); Serial.println(0x73, HEX);
   if (c == 0x71) // WHO_AM_I   //IF YOU HAVE A BLUE IMU CHANGE TO 0x73
@@ -81,32 +81,66 @@ void setup() {
     while(1) ; // Loop forever if communication doesn't happen
   }
   /*****************************************/
+  
+  pinMode(led, OUTPUT);
+  digitalWrite(led, HIGH);
+
+
 }
 
-states oldState = STOP;
+states oldstate = STOP;
+
+int lastupdate = millis();
+int laststateupdate = millis();
+int dataupdate = millis();
+int stateupdate = millis();
+
+String responseData = "";
+
+bool signalReceived = false;
 
 void loop() {
-
   int m = millis() - lastupdate;
-  int n = millis()- laststateupdate;
-  
-  if(m > UPDATEPERIOD && n > STATEPERIOD ) //update period counts last time since state changed
-  {
-    val++;
-    updateState();
+
+  if (m > UPDATEPERIOD){
+    //update the server page with the current state 
+    sprintf(html2,"<html>\n<title>Current State</title>\n<body>\n<p>~%s~</p>\n</body>\n</html>", stateChar);
+    wifi.setPage("/",html2);
     lastupdate = millis();
-    if (oldState != state)// state changed so should update
-    {
-      laststateupdate = millis();
-      sprintf(html2,"<html>\n<title>Current State</title>\n<body>\n<p>~%s~</p>\n</body>\n</html>", stateChar);
-      wifi.setPage("/",html2);
-      oldState = state;
-      Serial.print("Current state: ");
-      Serial.println(stateChar);
-    }
-   wifi.setPage("/",html2); //why does this have to be here????
-  //Serial.println(wifi.getData());
   }
+
+  m = millis() - dataupdate;
+
+  if(m > DATAPERIOD){
+     String data = wifi.getData();
+     if (data != ""){
+     Serial.print("data: ");
+     Serial.println(data);
+     if(responseExtract(data) == stateChar){
+      m = millis() - stateupdate;
+      oldstate = state;
+      while(m > STATEPERIOD){ //in order to get the new state, it must have been at least STATEPERIOD since the last state change & the client and server must agree on the state
+        updateState();
+        if(oldstate != state){
+          Serial.println(stateChar);
+          Serial.println("vibrate sensors to indicate successful read");
+          stateupdate = millis();
+        }
+        m = millis() - stateupdate;
+      }
+     }
+     dataupdate = millis();
+     }
+    // else Serial.println("no data");
+  }
+}
+  
+
+String responseExtract(String s){
+  int beginInd = s.indexOf("~");
+  int endInd= s.lastIndexOf("~");
+
+  return( s.substring(beginInd+1,endInd));
 }
 
 void getInstruction(){
